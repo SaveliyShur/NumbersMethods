@@ -1,27 +1,24 @@
-module TestAllModules
+MODULE TestAllModules
     use SweepMethods_Test
-    use MethodOfEstablishing_Plate_Test
     implicit none
 
     private :: refresh_file
     public :: test_all
 
-    contains
+    CONTAINS
 
-    subroutine test_all()
+    SUBROUTINE test_all()
         call refresh_file()
         write(*,*) 'Тесты начаты'
         call progonka_test()
-        call UH_Test_GU()
-        call UH_Test_NoGU()
-        Write(*,*) 'Тесты завершены'
+        write(*,*) 'Тесты завершены'
         return
-    end subroutine
+    END SUBROUTINE
 
-    subroutine refresh_file()
+    SUBROUTINE refresh_file()
         open(1, file = "test/testlogs.txt", status = "replace")
         close(1)
-    end subroutine
+    END SUBROUTINE
 
 
-end module TestAllModules
+END MODULE TestAllModules

@@ -3,21 +3,21 @@
 !Входные параметры задаются в resource/Input.txt
 !Решение выводиться в файл resource/data_pt.plt
 
-module  PrandtlSolver_Plate
+MODULE  PrandtlSolver_Plate
     use SweepMethods
-    IMPLICIT NONE
-    contains
+    implicit none
+    CONTAINS
 
-    subroutine PrandtlSolve_Plate()
-        INTEGER, PARAMETER:: IO = 12 ! input-output unit
-        REAL, PARAMETER :: Eps = 3e-5
-        INTEGER NI, NJ
-        INTEGER I,J, S
-        REAL L,H,dx,dy, visk, U0
-        REAL,ALLOCATABLE :: X_Node(:,:),Y_Node(:,:)
-        REAL,ALLOCATABLE :: X_Cell(:,:),Y_Cell(:,:)
-        REAL,ALLOCATABLE :: U_c(:,:),V_c(:,:),P_c(:,:)
-        REAL,ALLOCATABLE :: U_n(:,:),V_n(:,:),P_n(:,:)
+    SUBROUTINE PrandtlSolve_Plate()
+        integer, parameter:: IO = 12 ! input-output unit
+        real, parameter :: Eps = 3e-5
+        integer NI, NJ
+        integer I,J, S
+        real L,H,dx,dy, visk, U0
+        real,allocatable :: X_Node(:,:),Y_Node(:,:)
+        real,allocatable :: X_Cell(:,:),Y_Cell(:,:)
+        real,allocatable :: U_c(:,:),V_c(:,:),P_c(:,:)
+        real,allocatable :: U_n(:,:),V_n(:,:),P_n(:,:)
         real, allocatable :: A(:), B(:), C(:), D(:)
 
         write(*,*) 'Read input file'
@@ -115,14 +115,14 @@ module  PrandtlSolver_Plate
 
                 If (((maxval(abs(U_n(I,1:NJ)-U_c(I,1:NJ)))/maxval(abs(U_n(I,1:NJ)))).LE.Eps).and.&
                     &((maxval(abs(V_n(I,1:NJ)-V_c(I,1:NJ)))/maxval(abs(V_n(I,1:NJ)))).LE.Eps)) then
-                        Write(*,*) "s = ", s,  "U_n(", I, "," , NJ, ")=", U_n(I,NJ)
+                        write(*,*) "s = ", s,  "U_n(", I, "," , NJ, ")=", U_n(I,NJ)
                         exit
                 endif
 
                 If (S>1000) then
                     write(*,*) "error s ","I=",I
-                    Write(*,*) "errotU", maxval(abs(U_n(I,1:NJ)-U_c(I,1:NJ)))/maxval(abs(U_n(I,1:NJ)))
-                    Write(*,*) "errotV", maxval(abs(V_n(I,1:NJ)-V_c(I,1:NJ)))/maxval(abs(V_n(I,1:NJ)))
+                    write(*,*) "errotU", maxval(abs(U_n(I,1:NJ)-U_c(I,1:NJ)))/maxval(abs(U_n(I,1:NJ)))
+                    write(*,*) "errotV", maxval(abs(V_n(I,1:NJ)-V_c(I,1:NJ)))/maxval(abs(V_n(I,1:NJ)))
                     stop
                 endif
 
@@ -135,70 +135,70 @@ module  PrandtlSolver_Plate
     !****************** Output Results ********************
 
         write(*,*) 'Output data node (Prandtl)'
-        Open(IO,FILE='source/resource/data_pr.tec')
-        Call OutputFields_Node(IO,NI,NJ,X_Node,Y_Node,U_n,V_n,P_n)
-        Close(IO)
+        open(IO,FILE='source/resource/data_pr.tec')
+        call OutputFields_Node(IO,NI,NJ,X_Node,Y_Node,U_n,V_n,P_n)
+        close(IO)
         return
 
-    end subroutine
+    END SUBROUTINE
 
     SUBROUTINE OutputFields_Cell(IO,NI,NJ,X,Y,U,V,P)
-        IMPLICIT NONE
+        implicit none
 
-        INTEGER NI,NJ,IO
-        REAL, DIMENSION(NI,NJ):: X,Y
-        REAL, DIMENSION(0:NI,0:NJ)::U,V,P
+        integer NI,NJ,IO
+        real, dimension(NI,NJ):: X,Y
+        real, dimension(0:NI,0:NJ)::U,V,P
 
-        Write(IO,*) 'VARIABLES = "X", "Y", "U", "V", "P"'
-        Write(IO,*) 'ZONE I=',NI,', J=',NJ,', DATAPACKING=BLOCK, VARLOCATION=([3-5]=CELLCENTERED)'
-        Write(IO,'(100E25.16)') X(1:NI,1:NJ)
-        Write(IO,'(100E25.16)') Y(1:NI,1:NJ)
-        Write(IO,'(100E25.16)') U(1:NI-1,1:NJ-1)
-        Write(IO,'(100E25.16)') V(1:NI-1,1:NJ-1)
-        Write(IO,'(100E25.16)') P(1:NI-1,1:NJ-1)
+        write(IO,*) 'VARIABLES = "X", "Y", "U", "V", "P"'
+        write(IO,*) 'ZONE I=',NI,', J=',NJ,', DATAPACKING=BLOCK, VARLOCATION=([3-5]=CELLCENTERED)'
+        write(IO,'(100E25.16)') X(1:NI,1:NJ)
+        write(IO,'(100E25.16)') Y(1:NI,1:NJ)
+        write(IO,'(100E25.16)') U(1:NI-1,1:NJ-1)
+        write(IO,'(100E25.16)') V(1:NI-1,1:NJ-1)
+        write(IO,'(100E25.16)') P(1:NI-1,1:NJ-1)
 
     END SUBROUTINE
 
     SUBROUTINE OutputFields_Node(IO,NI,NJ,X,Y,U,V,P)
-        IMPLICIT NONE
+        implicit none
 
-        INTEGER NI,NJ,IO
-        REAL, DIMENSION(NI,NJ):: X,Y
-        REAL, DIMENSION(NI,NJ):: U,V,P
+        integer NI,NJ,IO
+        real, dimension(NI,NJ):: X,Y
+        real, dimension(NI,NJ):: U,V,P
 
-        Write(IO,*) 'VARIABLES = "X", "Y", "U", "V", "P"'
-        Write(IO,*) 'ZONE I=',NI,', J=',NJ, ', DATAPACKING=BLOCK'
-        Write(IO,'(100E25.16)') X(1:NI,1:NJ)
-        Write(IO,'(100E25.16)') Y(1:NI,1:NJ)
-        Write(IO,'(100E25.16)') U(1:NI,1:NJ)
-        Write(IO,'(100E25.16)') V(1:NI,1:NJ)
-        Write(IO,'(100E25.16)') P(1:NI,1:NJ)
+        write(IO,*) 'VARIABLES = "X", "Y", "U", "V", "P"'
+        write(IO,*) 'ZONE I=',NI,', J=',NJ, ', DATAPACKING=BLOCK'
+        write(IO,'(100E25.16)') X(1:NI,1:NJ)
+        write(IO,'(100E25.16)') Y(1:NI,1:NJ)
+        write(IO,'(100E25.16)') U(1:NI,1:NJ)
+        write(IO,'(100E25.16)') V(1:NI,1:NJ)
+        write(IO,'(100E25.16)') P(1:NI,1:NJ)
 
     END  SUBROUTINE
 
-    !----------------------- Set Boundary Condition ------------
-    subroutine BoundValue(U,V,NI,NJ,U0)
-        IMPLICIT NONE
+    !Set Boundary Conditio
+    SUBROUTINE BoundValue(U,V,NI,NJ,U0)
+        implicit none
 
-        INTEGER NI,NJ
-        REAL :: U(1:NI,1:NJ), V(1:NI,1:NJ)
-        REAL U0
+        integer NI,NJ
+        real :: U(1:NI,1:NJ), V(1:NI,1:NJ)
+        real U0
 
         U(1:NI,1) = 0.
         V(1:NI,1) = 0.
         U(1:NI,NJ) = U0
 
-    end subroutine
+    END SUBROUTINE
 
-    !---------------Set Initial Values---------------------
-    subroutine InitValue(U,NI,NJ,U0)
-        IMPLICIT NONE
+    !Set Initial Values
+    SUBROUTINE InitValue(U,NI,NJ,U0)
+        implicit none
 
-        Real :: U(1:NI,1:NJ)
-        Real U0
-        INTEGER NI,NJ
+        real :: U(1:NI,1:NJ)
+        real U0
+        integer NI,NJ
 
         U(1,1:NJ) = U0
 
-    end subroutine
-End module
+    END SUBROUTINE
+END MODULE

@@ -1,12 +1,12 @@
-module  SweepMethods_Test
+MODULE  SweepMethods_Test
     use SweepMethods
     IMPLICIT NONE
     real, parameter :: eps = 0.000001
     integer, parameter :: logs = 1
 
-    contains
+    CONTAINS
 
-    subroutine progonka_test()
+    SUBROUTINE progonka_test()
         INTEGER :: NI
         REAL,ALLOCATABLE :: A(:),B(:),C(:),D(:), U(:), ANSWER(:)
         open(logs, file = "test/testlogs.txt", status = "old")
@@ -37,6 +37,6 @@ module  SweepMethods_Test
         end if
         close(logs)
         return
-    end subroutine
+    END SUBROUTINE
 
-End module
+END MODULE
