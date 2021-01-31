@@ -55,7 +55,7 @@ MODULE MethodOfEstablishing_Plate
         dy=H/(NJ-1)
         A = 1/(U0**2)
         dt = CFL * min(dx/U0, min(0.5*dx*dx/visk, 0.5*dy*dy/visk))
-
+       ! dt = 0.001
         do I=1,NI
             X_Cell(I)=(I-0.5)*dx
         end do
@@ -96,7 +96,7 @@ call writeAnswer(IO,NI,NJ,X_Cell,Y_Cell,U,V,P)
         end do
         do I = 1, NI
             do J = 0, NJ-1
-                V_cap(I,J) = 0.5 * (V(I+1,J) + V(I,J))
+                V_cap(I,J) = 0.5 * (V(I,J) + V(I,J+1))
                 if (V_cap(I,J) .ge. 0.0) then
                     U_j_half(I,J) = U(I,J)
                     V_j_half(I,J) = V(I,J)
@@ -113,7 +113,7 @@ call writeAnswer(IO,NI,NJ,X_Cell,Y_Cell,U,V,P)
         do J = 1, NJ-1
             do I = 1, NI-1
                 !Вычисление давления
-                P_n(I,J) = P(I,J) - (dt/A)*( (U_i_half(I,J) - U_i_half(I-1,J))/dx &
+                P_n(I,J) = P(I,J) - dt * (U0**2) *( (U_i_half(I,J) - U_i_half(I-1,J))/dx &
                 & + (V_j_half(I,J) - V_j_half(I,J-1))/dy )
 
                 !Высление продольной компоненты скорости
@@ -134,9 +134,7 @@ call writeAnswer(IO,NI,NJ,X_Cell,Y_Cell,U,V,P)
                 call BoundValue(U_n, V_n, P_n, NI, NJ, U0)
             end do
         end do
-        U_n = U + 0.1*(U_n - U)
-        V_n = V + 0.1*(V_n - V)
-        P_n = P + 0.1*(P_n - P)
+
         !Проверяем сходимость и выводим невязки
         U_Residuals = maxval(abs(U_n-U))/maxval(abs(U_n))
         V_Residuals = maxval(abs(V_n-V))/maxval(abs(V_n))
