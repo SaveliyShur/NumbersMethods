@@ -3,15 +3,16 @@
 !Входные параметры задаются в resource/Input.txt
 !Решение выводиться в файл resource/data_ns.plt
 MODULE MethodOfEstablishing_Plate
+    use Logger_module
     implicit none
     CONTAINS
 
     SUBROUTINE MethodOfEstablishinglSolve_Plate()
         use omp_lib
         implicit none
-        integer, parameter:: IO = 1, IO_Residuals = 2, loggers = 3 ! input-output unit
-        real, parameter :: Eps = 1e-7
-        integer NI, NJ, NITER
+        integer, parameter:: IO = 1145661, IO_Residuals = 25451, loggers = 331231 ! input-output unit
+        real :: Eps
+        integer NI, NJ, NITER, ios
         integer I,J, N, num
         real L,H,dx,dy, visk, U0, CFL
         real dt, A, U_Residuals, V_Residuals, P_Residuals
@@ -22,17 +23,29 @@ MODULE MethodOfEstablishing_Plate
         real, allocatable:: U_i_half(:,:), V_i_half(:,:), P_i_half(:,:)
         real, allocatable:: U_j_half(:,:), V_j_half(:,:), P_j_half(:,:)
 
-        write(*,*) 'Read input file'
-        open(IO,FILE='source\resource\inputres\Input.txt')
+        call info('Read projects settings')
+        open(IO,file='projectsettings.txt', STATUS='OLD', IOSTAT=ios)
+        if(ios/=0) then
+            call fatal('projects settings no found')
+            stop 1
+        end if
+        read(IO,*) Eps
+        read(IO,*) NITER
+        read(IO,*) num
+        close(IO)
+        call info('Read projects settings :: complete')
+
+        call info('Read input file')
+        open(IO,file='source\resource\inputres\Input.txt')
         read(IO,*) L
         read(IO,*) H
         read(IO,*) NI
         read(IO,*) NJ
         read(IO,*) U0
         read(IO,*) visk
-        read(IO,*) NITER
         read(IO,*) CFL
         close(IO)
+        call info('Read input file :: complete')
 
         allocate(X_Cell(0:NI)) ! Cell Centers
         allocate(Y_Cell(0:NJ)) ! Cell Centers
@@ -56,8 +69,8 @@ MODULE MethodOfEstablishing_Plate
         dy=H/(NJ-1)
         A = 1/(U0**2)
         dt = CFL * min(dx/U0, min(0.5*dx*dx/visk, 0.5*dy*dy/visk))
-        num = 4
         call omp_set_num_threads(num);
+
         do I=1,NI
             X_Cell(I)=(I-0.5)*dx
         end do
@@ -68,14 +81,14 @@ MODULE MethodOfEstablishing_Plate
         Y_Cell(0) = -dy/2.0
 
 
-
+    call info('start MethodOfEstablishingl solver for liquid, parameters: eps=' // trim(realToChar(Eps)) // ' NITER='&
+    & // trim(intToChar(NITER)) // ' numbers thread=' // trim(intToChar(num))  )
     !Initial field
     call InitValue(U, V, P, NI, NJ, U0)
     call BoundValue(U, V, P, NI, NJ, U0)
     U_n = U
     V_n = V
     P_n = P
-call writeAnswer(IO,NI,NJ,X_Cell,Y_Cell,U,V,P)
 
     !Solve equation
     open(IO_Residuals,FILE='source/resource/outputres/residuals.dat', status = "replace")
@@ -153,7 +166,8 @@ call writeAnswer(IO,NI,NJ,X_Cell,Y_Cell,U,V,P)
         V_Residuals = maxval(abs(V_n-V))/maxval(abs(V_n))
         P_Residuals = maxval(abs(P_n-P))/maxval(abs(P_n))
         if( (U_Residuals.le.Eps ) .and. (V_Residuals.le.Eps ) .and. (P_Residuals.le.Eps ) ) then
-            write(*,*) "MethodOfEstablishinglSolve_Plate:Complete"
+            write(*,*) "MethodOfEstablishinglSolve_Plate : Complete"
+            call info('MethodOfEstablishingl solver for liquid :: Complete')
             exit
         endif
         if(MOD(N,100) .eq. 0) then
@@ -167,7 +181,10 @@ call writeAnswer(IO,NI,NJ,X_Cell,Y_Cell,U,V,P)
         V = V_n
         P = P_n
 
-        write(loggers, *) U(0,0), U(1,0), U(0,1), U(1,1)
+        if(N .eq. NITER) then
+            call error('MethodOfEstablishingl solver for liquid :: Solution underreported, eps=' //&
+            & realToChar(max(U_Residuals, V_Residuals, P_Residuals)))
+        end if
     end do
 
     close(IO_Residuals)
@@ -185,11 +202,12 @@ call writeAnswer(IO,NI,NJ,X_Cell,Y_Cell,U,V,P)
        real, dimension(NI):: X
        real, dimension(NJ):: Y
        real, dimension(0:NI,0:NJ)::U,V,P
-
+       call info('Write answer')
        write(*,*) 'Output data cell (Navier - Stokes) '
        open(IO,FILE='source/resource/outputres/data_ns.tec', status = "replace")
        call OutputFields_Cell(IO,NI,NJ,X,Y,U,V,P)
        close(IO)
+       call info('Write answer :: Complete')
     END SUBROUTINE writeAnswer
 
     !Функция для вывода в формате техплот

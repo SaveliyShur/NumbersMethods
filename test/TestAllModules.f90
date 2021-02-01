@@ -1,5 +1,6 @@
 MODULE TestAllModules
     use SweepMethods_Test
+    use Logger_Test
     implicit none
 
     private :: refresh_file
@@ -11,6 +12,8 @@ MODULE TestAllModules
         call refresh_file()
         write(*,*) 'Тесты начаты'
         call progonka_test()
+        call realToChar_Test()
+        call intToChar_Test()
         write(*,*) 'Тесты завершены'
         return
     END SUBROUTINE

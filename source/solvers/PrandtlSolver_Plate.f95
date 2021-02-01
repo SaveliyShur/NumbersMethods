@@ -5,14 +5,15 @@
 
 MODULE  PrandtlSolver_Plate
     use SweepMethods
+    use Logger_module
     implicit none
     CONTAINS
 
     SUBROUTINE PrandtlSolve_Plate()
-        integer, parameter:: IO = 12 ! input-output unit
-        real, parameter :: Eps = 3e-5
+        integer, parameter:: IO = 5165146 ! input-output unit
+        real :: Eps
         integer NI, NJ
-        integer I,J, S
+        integer I,J, NITER, ios, s
         real L,H,dx,dy, visk, U0
         real,allocatable :: X_Node(:,:),Y_Node(:,:)
         real,allocatable :: X_Cell(:,:),Y_Cell(:,:)
@@ -20,6 +21,18 @@ MODULE  PrandtlSolver_Plate
         real,allocatable :: U_n(:,:),V_n(:,:),P_n(:,:)
         real, allocatable :: A(:), B(:), C(:), D(:)
 
+        call info('Read projects settings')
+        open(IO,file='projectsettings.txt', STATUS='OLD', IOSTAT=ios)
+        if(ios/=0) then
+            call fatal('projects settings no found')
+            stop 1
+        end if
+        read(IO,*) Eps
+        read(IO,*) NITER
+        close(IO)
+        call info('Read projects settings :: complete')
+
+        call info('Read input file')
         write(*,*) 'Read input file'
         open(IO,FILE='source\resource\inputres\Input.txt')
         read(IO,*) L
@@ -29,6 +42,7 @@ MODULE  PrandtlSolver_Plate
         read(IO,*) U0
         read(IO,*) visk
         close(IO)
+        call info('Read input file : Complete')
 
         allocate(X_Node(NI,NJ)) ! mesh nodes X-coordinates
         allocate(Y_Node(NI,NJ)) ! mesh nodes Y-coordinates
@@ -72,7 +86,8 @@ MODULE  PrandtlSolver_Plate
         end do
 
     !************************* INITIAL FIELD *********************
-
+        call info('Start Prandtl solver for liquid, parameters: eps=' // realToChar(Eps) // 'NITER='&
+    & // intToChar(NITER)   )
         U_c = 0.
         V_c = 0.
         U_n = 0.
@@ -86,9 +101,9 @@ MODULE  PrandtlSolver_Plate
         do I = 2, NI
             U_c(I,1:NJ) = U_c(I-1,1:NJ)
             V_c(I,1:NJ) = V_c(I-1,1:NJ)
-            S = 0
+            s = 0
             do
-                S = S + 1
+                s = s + 1
                 A(1) = 0
                 B(1) = 1
                 C(1) = 0
@@ -115,15 +130,17 @@ MODULE  PrandtlSolver_Plate
 
                 If (((maxval(abs(U_n(I,1:NJ)-U_c(I,1:NJ)))/maxval(abs(U_n(I,1:NJ)))).LE.Eps).and.&
                     &((maxval(abs(V_n(I,1:NJ)-V_c(I,1:NJ)))/maxval(abs(V_n(I,1:NJ)))).LE.Eps)) then
-                        write(*,*) "s = ", s,  "U_n(", I, "," , NJ, ")=", U_n(I,NJ)
+                        write(*,*) "s = ", s,  "Prandtl solver for liquid :: Complete"
+                        call info('Prandtl solver for liquid :: Complete')
                         exit
                 endif
 
-                If (S>1000) then
-                    write(*,*) "error s ","I=",I
-                    write(*,*) "errotU", maxval(abs(U_n(I,1:NJ)-U_c(I,1:NJ)))/maxval(abs(U_n(I,1:NJ)))
-                    write(*,*) "errotV", maxval(abs(V_n(I,1:NJ)-V_c(I,1:NJ)))/maxval(abs(V_n(I,1:NJ)))
-                    stop
+                If (s > NITER) then
+                    call error('Prandtl solver for liquid :: Error, errotU=' &
+                    & // realToChar(maxval(abs(U_n(I,1:NJ)-U_c(I,1:NJ)))/maxval(abs(U_n(I,1:NJ)))) &
+                    & // 'errorV' // realToChar(maxval(abs(V_n(I,1:NJ)-V_c(I,1:NJ)))/maxval(abs(V_n(I,1:NJ)))))
+                    write(*,*) 'Stop method for iter'
+                    stop 2
                 endif
 
                 U_c=U_n
@@ -135,9 +152,11 @@ MODULE  PrandtlSolver_Plate
     !****************** Output Results ********************
 
         write(*,*) 'Output data node (Prandtl)'
+        call info('Output data node (Prandtl)')
         open(IO,FILE='source/resource/outputres/data_pr.tec')
         call OutputFields_Node(IO,NI,NJ,X_Node,Y_Node,U_n,V_n,P_n)
         close(IO)
+        call info('Output data node (Prandtl) :: Complete')
         return
 
     END SUBROUTINE
