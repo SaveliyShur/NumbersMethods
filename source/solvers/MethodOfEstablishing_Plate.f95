@@ -4,14 +4,15 @@
 !Решение выводиться в файл resource/data_ns.plt
 MODULE MethodOfEstablishing_Plate
     implicit none
-
     CONTAINS
 
     SUBROUTINE MethodOfEstablishinglSolve_Plate()
+        use omp_lib
+        implicit none
         integer, parameter:: IO = 1, IO_Residuals = 2, loggers = 3 ! input-output unit
-        real, parameter :: Eps = 3e-6
+        real, parameter :: Eps = 1e-7
         integer NI, NJ, NITER
-        integer I,J, N
+        integer I,J, N, num
         real L,H,dx,dy, visk, U0, CFL
         real dt, A, U_Residuals, V_Residuals, P_Residuals
         real,allocatable :: X_Cell(:),Y_Cell(:)
@@ -55,7 +56,8 @@ MODULE MethodOfEstablishing_Plate
         dy=H/(NJ-1)
         A = 1/(U0**2)
         dt = CFL * min(dx/U0, min(0.5*dx*dx/visk, 0.5*dy*dy/visk))
-       ! dt = 0.001
+        num = 4
+        call omp_set_num_threads(num);
         do I=1,NI
             X_Cell(I)=(I-0.5)*dx
         end do
@@ -78,8 +80,11 @@ call writeAnswer(IO,NI,NJ,X_Cell,Y_Cell,U,V,P)
     !Solve equation
     open(IO_Residuals,FILE='source/resource/residuals.dat', status = "replace")
     open(loggers, FILE='source/resource/logs.txt', status = "replace")
+
     do N = 1, NITER
         !Вычисление значений в полуцелых индексах
+        !$omp parallel
+        !$omp do
         do I = 0, NI-1
             do J = 1, NJ
                 U_cap(I,J) = 0.5 * (U(I+1,J) + U(I,J))
@@ -94,6 +99,8 @@ call writeAnswer(IO,NI,NJ,X_Cell,Y_Cell,U,V,P)
                 end if
             end do
         end do
+        !$omp end do
+        !$omp do
         do I = 1, NI
             do J = 0, NJ-1
                 V_cap(I,J) = 0.5 * (V(I,J) + V(I,J+1))
@@ -108,7 +115,9 @@ call writeAnswer(IO,NI,NJ,X_Cell,Y_Cell,U,V,P)
                 end if
             end do
         end do
-
+        !$omp end do
+        !$omp barrier
+        !$omp do
         !Вычисление компонент решения
         do J = 1, NJ-1
             do I = 1, NI-1
@@ -130,10 +139,14 @@ call writeAnswer(IO,NI,NJ,X_Cell,Y_Cell,U,V,P)
                 & - visk*(V(I+1,J) - 2*v(I,J) + V(I-1,J))/(dx**2) &
                 & - visk*(V(I,J+1) - 2*v(I,J) + V(I,J-1))/(dy**2) )
 
-                !Пересчет в граничных ячейках
-                call BoundValue(U_n, V_n, P_n, NI, NJ, U0)
+
             end do
         end do
+        !$omp end do
+        !$omp end parallel
+
+        !Пересчет в граничных ячейках
+        call BoundValue(U_n, V_n, P_n, NI, NJ, U0)
 
         !Проверяем сходимость и выводим невязки
         U_Residuals = maxval(abs(U_n-U))/maxval(abs(U_n))
@@ -143,7 +156,7 @@ call writeAnswer(IO,NI,NJ,X_Cell,Y_Cell,U,V,P)
             write(*,*) "MethodOfEstablishinglSolve_Plate:Complete"
             exit
         endif
-        if(MOD(N,5) .eq. 0) then
+        if(MOD(N,100) .eq. 0) then
             write(*,*) "N=", N, "eps=", max(U_Residuals, V_Residuals, P_Residuals)
         end if
 
@@ -156,6 +169,7 @@ call writeAnswer(IO,NI,NJ,X_Cell,Y_Cell,U,V,P)
 
         write(loggers, *) U(0,0), U(1,0), U(0,1), U(1,1)
     end do
+
     close(IO_Residuals)
     close(loggers)
 
