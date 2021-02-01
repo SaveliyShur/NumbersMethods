@@ -33,7 +33,7 @@ MODULE  PrandtlSolver_Plate
         call info('Read projects settings :: complete')
 
         call info('Read input file')
-        open(IO,FILE='source\resource\inputres\Input.txt')
+        open(IO,FILE='resource\inputres\Input.txt')
         read(IO,*) L
         read(IO,*) H
         read(IO,*) NI
@@ -154,7 +154,7 @@ MODULE  PrandtlSolver_Plate
 
         write(*,*) 'Output data node (Prandtl)'
         call info('Output data node (Prandtl)')
-        open(IO,FILE='source/resource/outputres/data_pr.tec')
+        open(IO,FILE='resource/outputres/data_pr.tec')
         call OutputFields_Node(IO,NI,NJ,X_Node,Y_Node,U_n,V_n,P_n)
         close(IO)
         call info('Output data node (Prandtl) :: Complete')

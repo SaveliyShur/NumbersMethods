@@ -14,7 +14,7 @@ CONTAINS
     SUBROUTINE initializeLogger()
         if (.not. associated(logger_single)) then
             allocate(logger_single)
-            open(io, file='source\resource\outputres\logs_logger.txt', status = 'REPLACE')
+            open(io, file='resource\outputres\logs_logger.txt', status = 'REPLACE')
             write(io,*) 'initializeLogger'
         end if
     END SUBROUTINE initializeLogger
@@ -55,7 +55,6 @@ CONTAINS
     CHARACTER(24) FUNCTION realToChar(r)
         implicit none
         real :: r
-        real :: drob
         integer(8) :: drobInt, wholeInt
         integer :: i
         drobInt = int(r * 1e10)

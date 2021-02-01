@@ -36,7 +36,7 @@ MODULE MethodOfEstablishing_Plate
         call info('Read projects settings :: complete')
 
         call info('Read input file')
-        open(IO,file='source\resource\inputres\Input.txt')
+        open(IO,file='resource\inputres\Input.txt')
         read(IO,*) L
         read(IO,*) H
         read(IO,*) NI
@@ -83,6 +83,7 @@ MODULE MethodOfEstablishing_Plate
 
     call info('start MethodOfEstablishingl solver for liquid, parameters: eps=' // trim(realToChar(Eps)) // ' NITER='&
     & // trim(intToChar(NITER)) // ' numbers thread=' // trim(intToChar(num))  )
+
     !Initial field
     call InitValue(U, V, P, NI, NJ, U0)
     call BoundValue(U, V, P, NI, NJ, U0)
@@ -91,8 +92,7 @@ MODULE MethodOfEstablishing_Plate
     P_n = P
 
     !Solve equation
-    open(IO_Residuals,FILE='source/resource/outputres/residuals.dat', status = "replace")
-    open(loggers, FILE='source/resource/outputres/logs.txt', status = "replace")
+    open(IO_Residuals,FILE='resource/outputres/residuals.dat', status = "replace")
 
     do N = 1, NITER
         !Вычисление значений в полуцелых индексах
@@ -188,7 +188,6 @@ MODULE MethodOfEstablishing_Plate
     end do
 
     close(IO_Residuals)
-    close(loggers)
 
     call writeAnswer(IO,NI,NJ,X_Cell,Y_Cell,U_n,V_n,P_n)
     return
@@ -204,7 +203,7 @@ MODULE MethodOfEstablishing_Plate
        real, dimension(0:NI,0:NJ)::U,V,P
        call info('Write answer')
        write(*,*) 'Output data cell (Navier - Stokes) '
-       open(IO,FILE='source/resource/outputres/data_ns.tec', status = "replace")
+       open(IO,FILE='resource/outputres/data_ns.tec', status = "replace")
        call OutputFields_Cell(IO,NI,NJ,X,Y,U,V,P)
        close(IO)
        call info('Write answer :: Complete')
