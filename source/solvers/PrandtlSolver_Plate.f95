@@ -33,7 +33,6 @@ MODULE  PrandtlSolver_Plate
         call info('Read projects settings :: complete')
 
         call info('Read input file')
-        write(*,*) 'Read input file'
         open(IO,FILE='source\resource\inputres\Input.txt')
         read(IO,*) L
         read(IO,*) H
@@ -86,8 +85,8 @@ MODULE  PrandtlSolver_Plate
         end do
 
     !************************* INITIAL FIELD *********************
-        call info('Start Prandtl solver for liquid, parameters: eps=' // realToChar(Eps) // 'NITER='&
-    & // intToChar(NITER)   )
+        call info('Start Prandtl solver for liquid, parameters: eps=' // trim(realToChar(Eps)) // ' NITER='&
+    & // trim(intToChar(NITER))   )
         U_c = 0.
         V_c = 0.
         U_n = 0.
@@ -130,15 +129,15 @@ MODULE  PrandtlSolver_Plate
 
                 If (((maxval(abs(U_n(I,1:NJ)-U_c(I,1:NJ)))/maxval(abs(U_n(I,1:NJ)))).LE.Eps).and.&
                     &((maxval(abs(V_n(I,1:NJ)-V_c(I,1:NJ)))/maxval(abs(V_n(I,1:NJ)))).LE.Eps)) then
-                        write(*,*) "s = ", s,  "Prandtl solver for liquid :: Complete"
-                        call info('Prandtl solver for liquid :: Complete')
+                        write(*,*) "I=", I, " s=", s
                         exit
                 endif
 
                 If (s > NITER) then
                     call error('Prandtl solver for liquid :: Error, errotU=' &
-                    & // realToChar(maxval(abs(U_n(I,1:NJ)-U_c(I,1:NJ)))/maxval(abs(U_n(I,1:NJ)))) &
-                    & // 'errorV' // realToChar(maxval(abs(V_n(I,1:NJ)-V_c(I,1:NJ)))/maxval(abs(V_n(I,1:NJ)))))
+                    & // trim(realToChar(maxval(abs(U_n(I,1:NJ)-U_c(I,1:NJ)))/maxval(abs(U_n(I,1:NJ))))) &
+                    & // ' errorV=' // trim(realToChar(maxval(abs(V_n(I,1:NJ)-V_c(I,1:NJ)))/maxval(abs(V_n(I,1:NJ))))) &
+                    & // ' I=' // trim(intToChar(I)))
                     write(*,*) 'Stop method for iter'
                     stop 2
                 endif
@@ -146,8 +145,10 @@ MODULE  PrandtlSolver_Plate
                 U_c=U_n
                 V_c=V_n
 
-            enddo
-        enddo
+            end do
+        end do
+        write(*,*) "Prandtl solver for liquid :: Complete"
+        call info('Prandtl solver for liquid :: Complete')
 
     !****************** Output Results ********************
 

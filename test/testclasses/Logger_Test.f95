@@ -19,6 +19,21 @@ module Logger_Test
         close(logs)
     END SUBROUTINE realToChar_Test
 
+    SUBROUTINE realToChar_Test2()
+        real, parameter :: a = 0.0000001
+        character(*), parameter ::  strans = '0.0000001'
+        character(24) ::  str
+        open(logs, file = "test/testlogs.txt", status = "old")
+        str = trim(realToChar(a))
+        if(str(1:9) .eq. strans) then
+            write(*,*) ' Logger_Test:realToChar_Test2::complete'
+        else
+            write(logs,*) ' Logger_Test:realToChar_Test2::ошибка :: ' // str
+            write(*,*) ' Logger_Test:realToChar_Test2::failed'
+        end if
+        close(logs)
+    END SUBROUTINE realToChar_Test2
+
     SUBROUTINE intToChar_Test()
         integer, parameter :: a = 9212132
         character(*), parameter ::  strans = '9212132'

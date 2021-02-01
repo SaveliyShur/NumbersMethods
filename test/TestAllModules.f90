@@ -14,6 +14,7 @@ MODULE TestAllModules
         call progonka_test()
         call realToChar_Test()
         call intToChar_Test()
+        call realToChar_Test2()
         write(*,*) 'Тесты завершены'
         return
     END SUBROUTINE

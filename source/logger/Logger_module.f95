@@ -57,15 +57,12 @@ CONTAINS
         real :: r
         real :: drob
         integer(8) :: drobInt, wholeInt
-        drob = r - int(r)
-        drobInt = int(drob * 1e8)
+        integer :: i
+        drobInt = int(r * 1e10)
         wholeInt = int(r)
         realToChar = ''
-        do
+        do i = 1,10
             realToChar = achar(mod(drobInt, 10) + 48) // realToChar
-            if(drobInt/10 .eq. 0) then
-                exit
-            end if
             drobInt = drobInt/10
         end do
         realToChar = '.' // realToChar
