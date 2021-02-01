@@ -21,7 +21,7 @@ MODULE  PrandtlSolver_Plate
         real, allocatable :: A(:), B(:), C(:), D(:)
 
         write(*,*) 'Read input file'
-        open(IO,FILE='source\resource\Input.txt')
+        open(IO,FILE='source\resource\inputres\Input.txt')
         read(IO,*) L
         read(IO,*) H
         read(IO,*) NI
@@ -135,7 +135,7 @@ MODULE  PrandtlSolver_Plate
     !****************** Output Results ********************
 
         write(*,*) 'Output data node (Prandtl)'
-        open(IO,FILE='source/resource/data_pr.tec')
+        open(IO,FILE='source/resource/outputres/data_pr.tec')
         call OutputFields_Node(IO,NI,NJ,X_Node,Y_Node,U_n,V_n,P_n)
         close(IO)
         return

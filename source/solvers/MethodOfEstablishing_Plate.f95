@@ -23,7 +23,7 @@ MODULE MethodOfEstablishing_Plate
         real, allocatable:: U_j_half(:,:), V_j_half(:,:), P_j_half(:,:)
 
         write(*,*) 'Read input file'
-        open(IO,FILE='source\resource\Input.txt')
+        open(IO,FILE='source\resource\inputres\Input.txt')
         read(IO,*) L
         read(IO,*) H
         read(IO,*) NI
@@ -78,8 +78,8 @@ MODULE MethodOfEstablishing_Plate
 call writeAnswer(IO,NI,NJ,X_Cell,Y_Cell,U,V,P)
 
     !Solve equation
-    open(IO_Residuals,FILE='source/resource/residuals.dat', status = "replace")
-    open(loggers, FILE='source/resource/logs.txt', status = "replace")
+    open(IO_Residuals,FILE='source/resource/outputres/residuals.dat', status = "replace")
+    open(loggers, FILE='source/resource/outputres/logs.txt', status = "replace")
 
     do N = 1, NITER
         !Вычисление значений в полуцелых индексах
@@ -187,7 +187,7 @@ call writeAnswer(IO,NI,NJ,X_Cell,Y_Cell,U,V,P)
        real, dimension(0:NI,0:NJ)::U,V,P
 
        write(*,*) 'Output data cell (Navier - Stokes) '
-       open(IO,FILE='source/resource/data_ns.tec', status = "replace")
+       open(IO,FILE='source/resource/outputres/data_ns.tec', status = "replace")
        call OutputFields_Cell(IO,NI,NJ,X,Y,U,V,P)
        close(IO)
     END SUBROUTINE writeAnswer
