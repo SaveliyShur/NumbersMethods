@@ -117,7 +117,7 @@ MODULE  PrandtlSolver_Plate
                         A(J) = -V_c(I,J-1)/(2*dy) - visk/(dy**2)
                         B(J) = U_c(I,J)/dx + 2*visk/(dy**2)
                         C(J) = V_c(I,J+1)/(2*dy) - visk/(dy**2)
-                        D(J) = U_n(I-1,J)**2 / dx
+                        D(J) = U_c(I-1,J)**2 / dx
                 enddo
 
                 call progonka(A,B,C,D,NJ,U_n(I,1:NJ))
@@ -134,12 +134,17 @@ MODULE  PrandtlSolver_Plate
                 endif
 
                 If (s > NITER) then
+
                     call error('Prandtl solver for liquid :: Error, errotU=' &
                     & // trim(realToChar(maxval(abs(U_n(I,1:NJ)-U_c(I,1:NJ)))/maxval(abs(U_n(I,1:NJ))))) &
                     & // ' errorV=' // trim(realToChar(maxval(abs(V_n(I,1:NJ)-V_c(I,1:NJ)))/maxval(abs(V_n(I,1:NJ))))) &
                     & // ' I=' // trim(intToChar(I)))
-                    write(*,*) 'Stop method for iter'
-                    stop 2
+
+                    write(*,*) 'I=', I, ' Stop method for iter, ', &
+                    & 'errU=', maxval(abs(U_n(I,1:NJ)-U_c(I,1:NJ)))/maxval(abs(U_n(I,1:NJ))), &
+                    & ' errV=', maxval(abs(V_n(I,1:NJ)-V_c(I,1:NJ)))/maxval(abs(V_n(I,1:NJ)))
+
+                    exit
                 endif
 
                 U_c=U_n
@@ -206,7 +211,8 @@ MODULE  PrandtlSolver_Plate
 
         U(1:NI,1) = 0.
         V(1:NI,1) = 0.
-        U(1:NI,NJ) = U0
+        U(1,2:NJ) = U0
+        U(1:NI, NJ) = U0
 
     END SUBROUTINE
 
