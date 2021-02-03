@@ -7,7 +7,7 @@ module NavieStocksGas
         use omp_lib
         implicit none
 
-        integer, parameter:: IO = 1145661, IO_Residuals = 25451, loggers = 331231
+        integer, parameter:: IO = 565, IO_Residuals = 1132, loggers = 498
         real :: Eps
         integer NI, NJ, NITER, ios
         integer I,J, N, num
@@ -83,7 +83,7 @@ module NavieStocksGas
         end do
 
 
-    call info('start MethodOfEstablishingl solver for liquid, parameters: eps=' // trim(realToChar(Eps)) // ' NITER='&
+    call info('start NavieStocksGas_Solver solver for gas, parameters: eps=' // trim(realToChar(Eps)) // ' NITER='&
     & // trim(intToChar(NITER)) // ' numbers thread=' // trim(intToChar(num))  )
 
     !Initial field
@@ -150,7 +150,7 @@ module NavieStocksGas
                 !Вычисление давления
                 if(J .eq. 1) then
                     P_n(I,J) = P(I,J) - dt * (U0**2) *( (U_i_half(I,J)*ro_i_half(I,J) - U_i_half(I-1,J)*ro_i_half(I-1,J))/dx &
-                    & + (V_j_half(I,J)*ro_j_half(I,J) )/dy )
+                    & - (V_j_half(I,J-1)*ro_j_half(I,J-1) )/dy )
                 else
                     P_n(I,J) = P(I,J) - dt * (U0**2) *( (U_i_half(I,J)*ro_i_half(I,J) - U_i_half(I-1,J)*ro_i_half(I-1,J))/dx &
                     & + (V_j_half(I,J)*ro_j_half(I,J) - V_j_half(I,J-1)*ro_j_half(I,J-1))/dy )
@@ -186,8 +186,8 @@ module NavieStocksGas
         V_Residuals = maxval(abs(V_n-V))/maxval(abs(V_n))
         P_Residuals = maxval(abs(P_n-P))/maxval(abs(P_n))
         if( (U_Residuals.le.Eps ) .and. (V_Residuals.le.Eps ) .and. (P_Residuals.le.Eps ) ) then
-            write(*,*) "MethodOfEstablishinglSolve_Plate : Complete"
-            call info('MethodOfEstablishingl solver for liquid :: Complete')
+            write(*,*) "NavieStocksGas_Solver : Complete"
+            call info('NavieStocksGas_Solver solver for liquid :: Complete')
             exit
         endif
         if(MOD(N,100) .eq. 0) then
@@ -202,7 +202,7 @@ module NavieStocksGas
         P = P_n
 
         if(N .eq. NITER) then
-            call error('MethodOfEstablishingl solver for liquid :: Solution underreported, eps=' //&
+            call error('NavieStocksGas_Solver solver for gas :: Solution underreported, eps=' //&
             & realToChar(max(U_Residuals, V_Residuals, P_Residuals)))
         end if
     end do

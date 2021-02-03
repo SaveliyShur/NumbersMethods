@@ -2,6 +2,8 @@ PROGRAM Main
     use PrandtlSolver_Plate
     use TestAllModules
     use MethodOfEstablishing_Plate
+    use NavieStocksGas
+    use PrandtlSolverGas
     use Logger_module
 
     implicit none
@@ -15,6 +17,6 @@ PROGRAM Main
             write(*,*) "Нераспознанный аргумент"
         end if
     end if
-    call MethodOfEstablishinglSolve_Plate()
+    call NavieStocksGas_Solver()
     call finalizeLogger()
 end PROGRAM Main

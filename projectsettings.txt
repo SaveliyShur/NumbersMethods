@@ -1,3 +1,3 @@
-1e-5 	!eps
-500000 	!Max number iterations
+1e-6 	!eps
+200000 	!Max number iterations
 4		!numbers thread
