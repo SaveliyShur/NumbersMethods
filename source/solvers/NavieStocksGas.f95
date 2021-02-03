@@ -146,11 +146,15 @@ module NavieStocksGas
         !Вычисление компонент решения
         do J = 1, NJ-1
             do I = 1, NI-1
+
                 !Вычисление давления
-
-                P_n(I,J) = P(I,J) - dt * (U0**2) *( (U_i_half(I,J)*ro_i_half(I,J) - U_i_half(I-1,J)*ro_i_half(I-1,J))/dx &
-                & + (V_j_half(I,J)*ro_j_half(I,J) - V_j_half(I,J-1)*ro_j_half(I,J-1))/dy )
-
+                if(J .eq. 1) then
+                    P_n(I,J) = P(I,J) - dt * (U0**2) *( (U_i_half(I,J)*ro_i_half(I,J) - U_i_half(I-1,J)*ro_i_half(I-1,J))/dx &
+                    & + (V_j_half(I,J)*ro_j_half(I,J) )/dy )
+                else
+                    P_n(I,J) = P(I,J) - dt * (U0**2) *( (U_i_half(I,J)*ro_i_half(I,J) - U_i_half(I-1,J)*ro_i_half(I-1,J))/dx &
+                    & + (V_j_half(I,J)*ro_j_half(I,J) - V_j_half(I,J-1)*ro_j_half(I,J-1))/dy )
+                end if
                 !Высление продольной компоненты скорости
                 U_n(I,J) = U(I,J) - dt/ro(I,J) &
                 & *( (U_cap(I,J)*U_i_half(I,J)*ro_i_half(I,J) - U_cap(I-1,J)*U_i_half(I-1,J)*ro_i_half(I-1,J))/dx &
