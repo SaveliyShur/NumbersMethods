@@ -6,8 +6,8 @@ MODULE SweepMethods
       !A*U(i-1)+ B*U(i)+C*U(i+1) = D
       implicit none
       integer::i,Im
-      real:: A(Im), B(Im),D(Im),C(Im),U(Im),F(Im),G(Im)
-      real:: t
+      real(8):: A(Im), B(Im),D(Im),C(Im),U(Im),F(Im),G(Im)
+      real(8):: t
       F(1)=-C(1)/B(1)
       G(1)=D(1)/B(1)
       do i=2, Im-1

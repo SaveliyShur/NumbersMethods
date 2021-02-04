@@ -6,15 +6,15 @@ MODULE PrandtlSolverGas
 
     SUBROUTINE PrandtlSolve_Gas()
         integer, parameter:: IO = 54156 ! input-output unit
-        real :: Eps
+        real(8) :: Eps
         integer NI, NJ
         integer I,J, NITER, ios, s
-        real L,H,dx,dy, visk, U0, Diametr, Cc, gamm, ro0, Uoe, Ue
-        real,allocatable :: X_Node(:,:),Y_Node(:,:)
-        real,allocatable :: U(:,:),V(:,:),P(:,:)
-        real,allocatable :: U_n(:,:),V_n(:,:)
-        real, allocatable :: A(:), B(:), C(:), D(:)
-        real, allocatable :: ro(:,:)
+        real(8) L,H,dx,dy, visk, U0, Diametr, Cc, gamm, ro0, Uoe, Ue
+        real(8),allocatable :: X_Node(:,:),Y_Node(:,:)
+        real(8),allocatable :: U(:,:),V(:,:),P(:,:)
+        real(8),allocatable :: U_n(:,:),V_n(:,:)
+        real(8), allocatable :: A(:), B(:), C(:), D(:)
+        real(8), allocatable :: ro(:,:)
 
         call info('Read projects settings')
         open(IO,file='projectsettings.txt', STATUS='OLD', IOSTAT=ios)
@@ -160,8 +160,8 @@ MODULE PrandtlSolverGas
         implicit none
 
         integer NI,NJ,IO
-        real, dimension(NI,NJ):: X,Y
-        real, dimension(0:NI,0:NJ)::U,V,P
+        real(8), dimension(NI,NJ):: X,Y
+        real(8), dimension(0:NI,0:NJ)::U,V,P
 
         write(IO,*) 'VARIABLES = "X", "Y", "U", "V", "P"'
         write(IO,*) 'ZONE I=',NI,', J=',NJ,', DATAPACKING=BLOCK, VARLOCATION=([3-5]=CELLCENTERED)'
@@ -177,8 +177,8 @@ MODULE PrandtlSolverGas
         implicit none
 
         integer NI,NJ,IO
-        real, dimension(NI,NJ):: X,Y
-        real, dimension(NI,NJ):: U,V,P
+        real(8), dimension(NI,NJ):: X,Y
+        real(8), dimension(NI,NJ):: U,V,P
 
         write(IO,*) 'VARIABLES = "X", "Y", "U", "V", "P"'
         write(IO,*) 'ZONE I=',NI,', J=',NJ, ', DATAPACKING=BLOCK'
@@ -195,8 +195,8 @@ MODULE PrandtlSolverGas
         implicit none
 
         integer NI,NJ
-        real :: U(1:NI,1:NJ), V(1:NI,1:NJ)
-        real :: U0, H, Diametr, Ue
+        real(8) :: U(1:NI,1:NJ), V(1:NI,1:NJ)
+        real(8) :: U0, H, Diametr, Ue
 
         U(1:NI,1) = 0.
         V(1:NI,1) = 0.
@@ -210,9 +210,9 @@ MODULE PrandtlSolverGas
     SUBROUTINE InitValue(U,V,P,ro,NI,NJ,U0, ro0, C, gamm, Ue)
         implicit none
 
-        real :: U(1:NI,1:NJ), P(1:NI,1:NJ), ro(1:NI,1:NJ)
-        real :: V(1:NI,1:NJ)
-        real U0, ro0, C, gamm, Ue
+        real(8) :: U(1:NI,1:NJ), P(1:NI,1:NJ), ro(1:NI,1:NJ)
+        real(8) :: V(1:NI,1:NJ)
+        real(8) U0, ro0, C, gamm, Ue
         integer NI,NJ
         ro = ro0
         P = C*(ro0**gamm)

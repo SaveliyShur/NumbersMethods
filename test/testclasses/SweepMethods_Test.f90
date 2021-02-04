@@ -1,14 +1,14 @@
 MODULE  SweepMethods_Test
     use SweepMethods
-    IMPLICIT NONE
-    real, parameter :: eps = 0.000001
+    implicit none
+    real(8), parameter :: eps = 0.000001
     integer, parameter :: logs = 1
 
     CONTAINS
 
     SUBROUTINE progonka_test()
-        INTEGER :: NI
-        REAL,ALLOCATABLE :: A(:),B(:),C(:),D(:), U(:), ANSWER(:)
+        integer :: NI
+        real(8),allocatable :: A(:),B(:),C(:),D(:), U(:), ANSWER(:)
         open(logs, file = "test/testlogs.txt", status = "old")
         NI = 4
         allocate(A(1:NI))

@@ -54,7 +54,7 @@ CONTAINS
 
     CHARACTER(24) FUNCTION realToChar(r)
         implicit none
-        real :: r
+        real(8) :: r
         integer(8) :: drobInt, wholeInt
         integer :: i
         drobInt = int(r * 1e10)

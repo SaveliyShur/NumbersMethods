@@ -8,17 +8,17 @@ module NavieStocksGas
         implicit none
 
         integer, parameter:: IO = 565, IO_Residuals = 1132, loggers = 498
-        real :: Eps
+        real(8) :: Eps
         integer NI, NJ, NITER, ios
         integer I,J, N, num
-        real L,H,dx,dy, visk, U0, CFL, Diametr, Cc, gamm, ro0, Uoe, Ue
-        real dt, A, U_Residuals, V_Residuals, P_Residuals
-        real,allocatable :: X_Cell(:),Y_Cell(:)
-        real,allocatable :: U(:,:),V(:,:),P(:,:), ro(:,:)
-        real,allocatable :: U_n(:,:),V_n(:,:),P_n(:,:), ro_n(:,:)
-        real, allocatable:: U_cap(:,:), V_cap(:,:)
-        real, allocatable:: U_i_half(:,:), V_i_half(:,:), P_i_half(:,:), ro_i_half(:,:)
-        real, allocatable:: U_j_half(:,:), V_j_half(:,:), P_j_half(:,:), ro_j_half(:,:)
+        real(8) L,H,dx,dy, visk, U0, CFL, Diametr, Cc, gamm, ro0, Uoe, Ue
+        real(8) dt, A, U_Residuals, V_Residuals, P_Residuals
+        real(8),allocatable :: X_Cell(:),Y_Cell(:)
+        real(8),allocatable :: U(:,:),V(:,:),P(:,:), ro(:,:)
+        real(8),allocatable :: U_n(:,:),V_n(:,:),P_n(:,:), ro_n(:,:)
+        real(8), allocatable:: U_cap(:,:), V_cap(:,:)
+        real(8), allocatable:: U_i_half(:,:), V_i_half(:,:), P_i_half(:,:), ro_i_half(:,:)
+        real(8), allocatable:: U_j_half(:,:), V_j_half(:,:), P_j_half(:,:), ro_j_half(:,:)
 
         call info('Read projects settings')
         open(IO,file='projectsettings.txt', STATUS='OLD', IOSTAT=ios)
@@ -215,9 +215,9 @@ module NavieStocksGas
        implicit none
 
        integer NI,NJ,IO
-       real, dimension(NI):: X
-       real, dimension(NJ):: Y
-       real, dimension(0:NI,0:NJ)::U,V,P
+       real(8), dimension(NI):: X
+       real(8), dimension(NJ):: Y
+       real(8), dimension(0:NI,0:NJ)::U,V,P
        call info('Write answer')
        write(*,*) 'Output data cell (Navier - Stokes) '
        open(IO,FILE='resource/outputres/data_ns.tec', status = "replace")
@@ -231,9 +231,9 @@ module NavieStocksGas
         implicit none
 
         integer NI,NJ,IO, i, j
-        real, dimension(NI):: X
-        real, dimension(NJ):: Y
-        real, dimension(0:NI,0:NJ)::U,V,P
+        real(8), dimension(NI):: X
+        real(8), dimension(NJ):: Y
+        real(8), dimension(0:NI,0:NJ)::U,V,P
 
         U(1,:) = (U(1,:) + U(0,:))/2.0
         V(1,:) = (V(1,:) + V(0,:))/2.0
@@ -264,8 +264,8 @@ module NavieStocksGas
         implicit none
 
         integer NI,NJ
-        real :: U(0:NI,0:NJ), V(0:NI,0:NJ), P(0:NI,0:NJ), ro(0:NI,0:NJ)
-        real :: U0, Ue, C, ro0, gamm, H, Diametr
+        real(8) :: U(0:NI,0:NJ), V(0:NI,0:NJ), P(0:NI,0:NJ), ro(0:NI,0:NJ)
+        real(8) :: U0, Ue, C, ro0, gamm, H, Diametr
 
         !левая граница
         U(0,1:nint(Diametr/H*NJ)) = U0
@@ -296,8 +296,8 @@ module NavieStocksGas
     SUBROUTINE InitValue(U,V,P,ro,NI,NJ,U0,Ue, ro0, Cc, gamm)
         implicit none
 
-        real :: U(0:NI,0:NJ), V(0:NI,0:NJ),P(0:NI,0:NJ), ro(0:NI,0:NJ)
-        real U0, Ue, Cc, gamm, ro0
+        real(8) :: U(0:NI,0:NJ), V(0:NI,0:NJ),P(0:NI,0:NJ), ro(0:NI,0:NJ)
+        real(8) U0, Ue, Cc, gamm, ro0
         integer NI,NJ
 
         U = Ue

@@ -1,11 +1,11 @@
 module Logger_Test
     use Logger_module
-    real, parameter :: eps = 0.000001
+    real(8), parameter :: eps = 0.000001
     integer, parameter :: logs = 1
     CONTAINS
 
     SUBROUTINE realToChar_Test()
-        real, parameter :: a = 92121.32
+        real(8), parameter :: a = 92121.32
         character(*), parameter ::  strans = '92121.32'
         character(24) ::  str
         open(logs, file = "test/testlogs.txt", status = "old")
@@ -20,7 +20,7 @@ module Logger_Test
     END SUBROUTINE realToChar_Test
 
     SUBROUTINE realToChar_Test2()
-        real, parameter :: a = 0.0000001
+        real(8), parameter :: a = 0.0000001
         character(*), parameter ::  strans = '0.0000001'
         character(24) ::  str
         open(logs, file = "test/testlogs.txt", status = "old")

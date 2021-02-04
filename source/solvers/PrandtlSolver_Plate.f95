@@ -11,15 +11,15 @@ MODULE  PrandtlSolver_Plate
 
     SUBROUTINE  PrandtlSolve_Plate()
         integer, parameter:: IO = 5165146, IO_Cf=324234 ! input-output unit
-        real :: Eps
+        real(8) :: Eps
         integer NI, NJ
         integer I,J, NITER, ios, s
-        real L,H,dx,dy, visk, U0
-        real,allocatable :: X_Node(:,:),Y_Node(:,:)
-        real,allocatable :: X_Cell(:,:),Y_Cell(:,:)
-        real,allocatable :: U_c(:,:),V_c(:,:),P_c(:,:)
-        real,allocatable :: U_n(:,:),V_n(:,:),P_n(:,:)
-        real, allocatable :: A(:), B(:), C(:), D(:)
+        real(8) L,H,dx,dy, visk, U0
+        real(8),allocatable :: X_Node(:,:),Y_Node(:,:)
+        real(8),allocatable :: X_Cell(:,:),Y_Cell(:,:)
+        real(8),allocatable :: U_c(:,:),V_c(:,:),P_c(:,:)
+        real(8),allocatable :: U_n(:,:),V_n(:,:),P_n(:,:)
+        real(8), allocatable :: A(:), B(:), C(:), D(:)
 
         call info('Read projects settings')
         open(IO,file='projectsettings.txt', STATUS='OLD', IOSTAT=ios)
@@ -167,8 +167,8 @@ MODULE  PrandtlSolver_Plate
         implicit none
 
         integer NI,NJ,IO
-        real, dimension(NI,NJ):: X,Y
-        real, dimension(0:NI,0:NJ)::U,V,P
+        real(8), dimension(NI,NJ):: X,Y
+        real(8), dimension(0:NI,0:NJ)::U,V,P
 
         write(IO,*) 'VARIABLES = "X", "Y", "U", "V", "P"'
         write(IO,*) 'ZONE I=',NI,', J=',NJ,', DATAPACKING=BLOCK, VARLOCATION=([3-5]=CELLCENTERED)'
@@ -184,8 +184,8 @@ MODULE  PrandtlSolver_Plate
         implicit none
 
         integer NI,NJ,IO
-        real, dimension(NI,NJ):: X,Y
-        real, dimension(NI,NJ):: U,V,P
+        real(8), dimension(NI,NJ):: X,Y
+        real(8), dimension(NI,NJ):: U,V,P
 
         write(IO,*) 'VARIABLES = "X", "Y", "U", "V", "P"'
         write(IO,*) 'ZONE I=',NI,', J=',NJ, ', DATAPACKING=BLOCK'
@@ -201,8 +201,8 @@ MODULE  PrandtlSolver_Plate
         implicit none
 
         integer NI,NJ
-        real :: U(1:NI,1:NJ), V(1:NI,1:NJ)
-        real U0
+        real(8) :: U(1:NI,1:NJ), V(1:NI,1:NJ)
+        real(8) U0
 
         U(1:NI,1) = 0.
         V(1:NI,1) = 0.
@@ -214,8 +214,8 @@ MODULE  PrandtlSolver_Plate
     SUBROUTINE InitValue(U,NI,NJ,U0)
         implicit none
 
-        real :: U(1:NI,1:NJ)
-        real U0
+        real(8) :: U(1:NI,1:NJ)
+        real(8) U0
         integer NI,NJ
 
         U(1,1:NJ) = U0
@@ -223,10 +223,10 @@ MODULE  PrandtlSolver_Plate
     END SUBROUTINE
 
     SUBROUTINE CfSolver(U0, visk, U, X_Node, Y_Node,  NI, NJ, IO_Cf)
-        real :: U0, visk
+        real(8) :: U0, visk
         integer :: IO_Cf, NI, NJ, I
-        real :: X_Node(1:NI,1:NJ), U(1:NI,1:NJ), Y_Node(1:NI,1:NJ)
-        real, allocatable :: Cf(:), Cf_Blazius(:)
+        real(8) :: X_Node(1:NI,1:NJ), U(1:NI,1:NJ), Y_Node(1:NI,1:NJ)
+        real(8), allocatable :: Cf(:), Cf_Blazius(:)
         call info('Расчет и вывод коэффициента сопротивления в файл Cf_x.dat')
         allocate(Cf(NI))
         allocate (Cf_Blazius(NI))
