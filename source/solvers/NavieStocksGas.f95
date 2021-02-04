@@ -148,13 +148,9 @@ module NavieStocksGas
             do I = 1, NI-1
 
                 !Вычисление давления
-                if(J .eq. 1) then
-                    P_n(I,J) = P(I,J) - dt * (U0**2) *( (U_i_half(I,J)*ro_i_half(I,J) - U_i_half(I-1,J)*ro_i_half(I-1,J))/dx &
-                    & - (V_j_half(I,J-1)*ro_j_half(I,J-1) )/dy )
-                else
-                    P_n(I,J) = P(I,J) - dt * (U0**2) *( (U_i_half(I,J)*ro_i_half(I,J) - U_i_half(I-1,J)*ro_i_half(I-1,J))/dx &
-                    & + (V_j_half(I,J)*ro_j_half(I,J) - V_j_half(I,J-1)*ro_j_half(I,J-1))/dy )
-                end if
+                P_n(I,J) = P(I,J) - dt * (U0**2) *( (U_i_half(I,J)*ro_i_half(I,J) - U_i_half(I-1,J)*ro_i_half(I-1,J))/dx &
+                & + (V_j_half(I,J)*ro_j_half(I,J) - V_j_half(I,J-1)*ro_j_half(I,J-1))/dy )
+
                 !Высление продольной компоненты скорости
                 U_n(I,J) = U(I,J) - dt/ro(I,J) &
                 & *( (U_cap(I,J)*U_i_half(I,J)*ro_i_half(I,J) - U_cap(I-1,J)*U_i_half(I-1,J)*ro_i_half(I-1,J))/dx &
@@ -171,7 +167,7 @@ module NavieStocksGas
                 & - 4.0/3.0* visk*(V(I+1,J) - 2*V(I,J) + V(I-1,J))/(dx**2) &
                 & - visk*(V(I,J+1) - 2*V(I,J) + V(I,J-1))/(dy**2) )
 
-                ro(I,J) = (P(I,J)/Cc)**(1.0/gamm)
+                ro_n(I,J) = (P(I,J)/Cc)**(1.0/gamm)
 
             end do
         end do
@@ -200,6 +196,7 @@ module NavieStocksGas
         U = U_n
         V = V_n
         P = P_n
+        ro = ro_n
 
         if(N .eq. NITER) then
             call error('NavieStocksGas_Solver solver for gas :: Solution underreported, eps=' //&
@@ -212,7 +209,6 @@ module NavieStocksGas
     call writeAnswer(IO,NI,NJ,X_Cell,Y_Cell,U_n,V_n,P_n)
     return
     END SUBROUTINE NavieStocksGas_Solver
-
 
     !Функция пишет ответ в файл
     SUBROUTINE writeAnswer(IO,NI,NJ,X,Y,U,V,P)
