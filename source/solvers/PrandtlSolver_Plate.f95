@@ -9,8 +9,8 @@ MODULE  PrandtlSolver_Plate
     implicit none
     CONTAINS
 
-    SUBROUTINE PrandtlSolve_Plate()
-        integer, parameter:: IO = 5165146 ! input-output unit
+    SUBROUTINE  ()
+        integer, parameter:: IO = 5165146, IO_Cf=324234 ! input-output unit
         real :: Eps
         integer NI, NJ
         integer I,J, NITER, ios, s
@@ -43,26 +43,23 @@ MODULE  PrandtlSolver_Plate
         close(IO)
         call info('Read input file : Complete')
 
-        allocate(X_Node(NI,NJ)) ! mesh nodes X-coordinates
-        allocate(Y_Node(NI,NJ)) ! mesh nodes Y-coordinates
-        allocate(X_Cell(0:NI,0:NJ)) ! Cell Centers
-        allocate(Y_Cell(0:NI,0:NJ)) ! Cell Centers
+        allocate(X_Node(NI,NJ))
+        allocate(Y_Node(NI,NJ))
+        allocate(X_Cell(0:NI,0:NJ))
+        allocate(Y_Cell(0:NI,0:NJ))
 
         allocate(A(1:NJ))
         allocate(B(1:NJ))
         allocate(C(1:NJ))
         allocate(D(1:NJ))
 
-    !*******************  Cell-centered variables **********
-        allocate(U_c(0:NI,0:NJ))   ! Velocity U
-        allocate(V_c(0:NI,0:NJ))   ! Velocity V
-        allocate(P_c(0:NI,0:NJ))   ! Pressure
+        allocate(U_c(0:NI,0:NJ))
+        allocate(V_c(0:NI,0:NJ))
+        allocate(P_c(0:NI,0:NJ))
 
-    !*******************  Node variables ******************
-        allocate(U_n(NI,NJ))   ! Velocity U
-        allocate(V_n(NI,NJ))   ! Velocity V
-        allocate(P_n(NI,NJ))   ! Pressure
-
+        allocate(U_n(NI,NJ))
+        allocate(V_n(NI,NJ))
+        allocate(P_n(NI,NJ))
         dx=L/(NI-1)
         dy=H/(NJ-1)
 
@@ -155,14 +152,13 @@ MODULE  PrandtlSolver_Plate
         write(*,*) "Prandtl solver for liquid :: Complete"
         call info('Prandtl solver for liquid :: Complete')
 
-    !****************** Output Results ********************
-
         write(*,*) 'Output data node (Prandtl)'
         call info('Output data node (Prandtl)')
         open(IO,FILE='resource/outputres/data_pr.tec')
         call OutputFields_Node(IO,NI,NJ,X_Node,Y_Node,U_n,V_n,P_n)
         close(IO)
         call info('Output data node (Prandtl) :: Complete')
+        call CfSolver(U0, visk, U_n, X_Node, Y_Node,  NI, NJ, IO_Cf)
         return
 
     END SUBROUTINE
@@ -201,7 +197,6 @@ MODULE  PrandtlSolver_Plate
 
     END  SUBROUTINE
 
-    !Set Boundary Conditio
     SUBROUTINE BoundValue(U,V,NI,NJ,U0)
         implicit none
 
@@ -216,7 +211,6 @@ MODULE  PrandtlSolver_Plate
 
     END SUBROUTINE
 
-    !Set Initial Values
     SUBROUTINE InitValue(U,NI,NJ,U0)
         implicit none
 
@@ -227,4 +221,25 @@ MODULE  PrandtlSolver_Plate
         U(1,1:NJ) = U0
 
     END SUBROUTINE
+
+    SUBROUTINE CfSolver(U0, visk, U, X_Node, Y_Node,  NI, NJ, IO_Cf)
+        real :: U0, visk
+        integer :: IO_Cf, NI, NJ, I
+        real :: X_Node(1:NI,1:NJ), U(1:NI,1:NJ), Y_Node(1:NI,1:NJ)
+        real, allocatable :: Cf(:), Cf_Blazius(:)
+        call info('Расчет и вывод коэффициента сопротивления в файл Cf_x.dat')
+        allocate(Cf(NI))
+        allocate (Cf_Blazius(NI))
+        open(IO_Cf, FILE='resource/outputres/Cf_x.dat', status = "replace")
+        write(IO_Cf, *) 'X Cf Cf_Blazius'
+        do I = 0, NI
+            Cf(I) = (2*visk/(U0**2))*(U(I,2)-U(I,1))/(Y_Node(I,2) - Y_Node(I,1))
+            Cf_Blazius(I) = 0.664/sqrt(U0*X_Node(I,1)/visk)
+            write(IO_Cf, *) X_Node(I,1), Cf(I), Cf_Blazius(I)
+        end do
+        close(IO_Cf)
+        deallocate (Cf)
+        deallocate (Cf_Blazius)
+        call info('Расчет и вывод коэффициента сопротивления в файл Cf_x.dat :: Complete')
+    END SUBROUTINE CfSolver
 END MODULE
