@@ -9,7 +9,7 @@ MODULE  PrandtlSolver_Plate
     implicit none
     CONTAINS
 
-    SUBROUTINE  ()
+    SUBROUTINE  PrandtlSolve_Plate()
         integer, parameter:: IO = 5165146, IO_Cf=324234 ! input-output unit
         real :: Eps
         integer NI, NJ
