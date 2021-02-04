@@ -83,7 +83,7 @@ MODULE  PrandtlSolver_Plate
 
     !************************* INITIAL FIELD *********************
         call info('Start Prandtl solver for liquid, parameters: eps=' // trim(realToChar(Eps)) // ' NITER='&
-    & // trim(intToChar(NITER))   )
+        & // trim(intToChar(NITER))   )
         U_c = 0.
         V_c = 0.
         U_n = 0.
@@ -93,6 +93,11 @@ MODULE  PrandtlSolver_Plate
         call InitValue(U_n,NI,NJ,U0)
         call BoundValue(U_n,V_c,NI,NJ,U0)
 
+        call info('Write init data in data_pr_init.tec')
+        open(IO,FILE='resource/outputres/data_pr_init.tec')
+        call OutputFields_Node(IO,NI,NJ,X_Node,Y_Node,U_n,V_n,P_n)
+        close(IO)
+        call info('Write data init :: Complete')
     !****************** Solve equation ********************
         do I = 2, NI
             U_c(I,1:NJ) = U_c(I-1,1:NJ)
@@ -223,23 +228,36 @@ MODULE  PrandtlSolver_Plate
     END SUBROUTINE
 
     SUBROUTINE CfSolver(U0, visk, U, X_Node, Y_Node,  NI, NJ, IO_Cf)
-        real(8) :: U0, visk
+        real(8) :: U0, visk, delta_max, delta_medium
         integer :: IO_Cf, NI, NJ, I
         real(8) :: X_Node(1:NI,1:NJ), U(1:NI,1:NJ), Y_Node(1:NI,1:NJ)
-        real(8), allocatable :: Cf(:), Cf_Blazius(:)
+        real(8), allocatable :: Cf(:), Cf_Blazius(:),  delta1(:)
         call info('Расчет и вывод коэффициента сопротивления в файл Cf_x.dat')
+        allocate (delta1(NI-2))
         allocate(Cf(NI))
         allocate (Cf_Blazius(NI))
         open(IO_Cf, FILE='resource/outputres/Cf_x.dat', status = "replace")
-        write(IO_Cf, *) 'X Cf Cf_Blazius'
-        do I = 0, NI
-            Cf(I) = (2*visk/(U0**2))*(U(I,2)-U(I,1))/(Y_Node(I,2) - Y_Node(I,1))
-            Cf_Blazius(I) = 0.664/sqrt(U0*X_Node(I,1)/visk)
-            write(IO_Cf, *) X_Node(I,1), Cf(I), Cf_Blazius(I)
+         write(IO_Cf,*) 'VARIABLES = "X", "Cf", "Cf_Blazius"'
+        do I = 3, NI
+            Cf(I-2) = (2*visk/(U0**2))*(U(I,2)-U(I,1))/(Y_Node(I,2) - Y_Node(I,1))
+            Cf_Blazius(I-2) = 0.664/sqrt(U0*X_Node(I,1)/visk)
+            if(Cf(I-2) > Cf_Blazius(I-2)) then
+                delta1(I-2) = (Cf(I-2) - Cf_Blazius(I-2))/Cf(I-2)
+            else
+                delta1(I-2) = (Cf_Blazius(I-2)-Cf(I-2))/Cf_Blazius(I-2)
+            end if
+            write(IO_Cf, *) X_Node(I-2,1), Cf(I-2), Cf_Blazius(I-2)
         end do
+        close(IO_Cf)
+        delta_max = MAXVAL(delta1(1:NI-2)) * 100
+        delta_medium = SUM(delta1(1:NI-2))/(NI-2) *100
+        open(IO_Cf, FILE='resource/outputres/Cf_delta.dat', status = "replace")
+        write(IO_Cf, *) 'delta_max=', delta_max
+        write(IO_Cf, *) 'delta_medium=', delta_medium
         close(IO_Cf)
         deallocate (Cf)
         deallocate (Cf_Blazius)
+        deallocate (delta1)
         call info('Расчет и вывод коэффициента сопротивления в файл Cf_x.dat :: Complete')
     END SUBROUTINE CfSolver
 END MODULE
