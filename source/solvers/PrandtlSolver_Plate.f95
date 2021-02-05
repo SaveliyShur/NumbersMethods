@@ -4,6 +4,7 @@
 !Решение выводиться в файл resource/data_pt.plt
 
 MODULE  PrandtlSolver_Plate
+    use Listener
     use SweepMethods
     use Logger_module
     implicit none
@@ -164,8 +165,11 @@ MODULE  PrandtlSolver_Plate
         close(IO)
         call info('Output data node (Prandtl) :: Complete')
         call CfSolver(U0, visk, U_n, X_Node, Y_Node,  NI, NJ, IO_Cf)
-        return
 
+        call initializeListener()
+        call writeListenXComponent(U_n, X_Node, Y_Node, NJ, NI, 'U_prandtl')
+
+        return
     END SUBROUTINE
 
     SUBROUTINE OutputFields_Cell(IO,NI,NJ,X,Y,U,V,P)

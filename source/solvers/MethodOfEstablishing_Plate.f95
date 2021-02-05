@@ -4,21 +4,24 @@
 !Решение выводиться в файл resource/data_ns.plt
 MODULE MethodOfEstablishing_Plate
     use Logger_module
+    use Listener
     implicit none
     CONTAINS
 
     SUBROUTINE MethodOfEstablishinglSolve_Plate()
         use omp_lib
         implicit none
-        integer, parameter:: IO = 1145661, IO_Residuals = 25451, loggers = 331231 ! input-output unit
+        integer, parameter:: IO = 1145661, IO_Residuals = 25451, loggers = 331231, IO_Cf=10121989 ! input-output unit
         real(8) :: Eps
         integer :: NI, NJ, NITER, ios
         integer :: I,J, N, num
         real(8) :: L,H,dx,dy, visk, U0, CFL
         real(8) :: dt, A, U_Residuals, V_Residuals, P_Residuals
-        real(8),allocatable :: X_Cell(:),Y_Cell(:)
+        real(8),allocatable :: X_Cell(:, :),Y_Cell(:,:)
+        real(8),allocatable :: X_Node(:, :),Y_Node(:,:)
         real(8),allocatable :: U(:,:),V(:,:),P(:,:)
         real(8),allocatable :: U_n(:,:),V_n(:,:),P_n(:,:)
+        real(8),allocatable :: U_Node(:,:),V_Node(:,:),P_Node(:,:)
         real(8), allocatable:: U_cap(:,:), V_cap(:,:)
         real(8), allocatable:: U_i_half(:,:), V_i_half(:,:), P_i_half(:,:)
         real(8), allocatable:: U_j_half(:,:), V_j_half(:,:), P_j_half(:,:)
@@ -47,18 +50,22 @@ MODULE MethodOfEstablishing_Plate
         close(IO)
         call info('Read input file :: complete')
 
-        allocate(X_Cell(0:NI)) ! Cell Centers
-        allocate(Y_Cell(0:NJ)) ! Cell Centers
+        allocate(X_Cell(0:NI,0:NJ))
+        allocate(Y_Cell(0:NI,0:NJ))
+        allocate(X_Node(1:NI,1:NJ))
+        allocate(Y_Node(1:NI,1:NJ))
 
-        !Cell-centered variables
-        allocate(U(0:NI,0:NJ))   ! Velocity U
-        allocate(V(0:NI,0:NJ))   ! Velocity V
-        allocate(P(0:NI,0:NJ))   ! Pressure
+        allocate(U(0:NI,0:NJ))
+        allocate(V(0:NI,0:NJ))
+        allocate(P(0:NI,0:NJ))
 
-        !Node variables
-        allocate(U_n(0:NI,0:NJ))   ! Velocity U
-        allocate(V_n(0:NI,0:NJ))   ! Velocity V
-        allocate(P_n(0:NI,0:NJ))   ! Pressure
+        allocate(U_n(0:NI,0:NJ))
+        allocate(V_n(0:NI,0:NJ))
+        allocate(P_n(0:NI,0:NJ))
+
+        allocate(U_Node(1:NI,1:NJ))
+        allocate(V_Node(1:NI,1:NJ))
+        allocate(P_Node(1:NI,1:NJ))
 
         allocate(U_cap(0:NI,0:NJ))
         allocate(V_cap(0:NI,0:NJ))
@@ -71,15 +78,22 @@ MODULE MethodOfEstablishing_Plate
         dt = CFL * min(dx/U0, min(0.5*dx*dx/visk, 0.5*dy*dy/visk))
         call omp_set_num_threads(num);
 
-        do I=1,NI
-            X_Cell(I)=(I-0.5)*dx
+        do J = 1, NJ
+            do I=1,NI
+                X_Cell(I,J)=(I-0.5)*dx
+                Y_Cell(I,J)=(J-0.5)*dy
+                X_Node(I,J) = (I-1)*dx
+                Y_Node(I,J) = (J-1)*dy
+            end do
         end do
-        do J=1,NJ
-            Y_Cell(J)=(J-0.5)*dy
-        end do
-        X_Cell(0) = -dx/2.0
-        Y_Cell(0) = -dy/2.0
 
+        do J=1,NJ
+            X_Cell(0,J) = -dx/2.0
+        end do
+
+        do I = 1, NI
+            Y_Cell(I,0) = -dy/2.0
+        end do
 
     call info('start MethodOfEstablishingl solver for liquid, parameters: eps=' // trim(realToChar(Eps)) // ' NITER='&
     & // trim(intToChar(NITER)) // ' numbers thread=' // trim(intToChar(num))  )
@@ -93,7 +107,7 @@ MODULE MethodOfEstablishing_Plate
 
     !Solve equation
     open(IO_Residuals,FILE='resource/outputres/residuals.dat', status = "replace")
-
+    write(IO_Residuals,*) 'VARIABLES = "N", "U_res", "V_res", "P_res"'
     do N = 1, NITER
         !Вычисление значений в полуцелых индексах
         !$omp parallel
@@ -167,14 +181,16 @@ MODULE MethodOfEstablishing_Plate
         P_Residuals = maxval(abs(P_n-P))/maxval(abs(P_n))
         if( (U_Residuals.le.Eps ) .and. (V_Residuals.le.Eps ) .and. (P_Residuals.le.Eps ) ) then
             write(*,*) "MethodOfEstablishinglSolve_Plate : Complete"
-            call info('MethodOfEstablishingl solver for liquid :: Complete')
+            call info('MethodOfEstablishingl solver for liquid :: Complete, N=' //trim(intToChar(N)))
             exit
         endif
         if(MOD(N,100) .eq. 0) then
             write(*,*) "N=", N, "eps=", max(U_Residuals, V_Residuals, P_Residuals)
         end if
 
-        write(IO_Residuals, *) dt*N, U_Residuals, V_Residuals, P_Residuals
+        if(N >= 3) then
+            write(IO_Residuals, *) N, U_Residuals, V_Residuals, P_Residuals
+        end if
 
         !Переопределяем для следующего шага
         U = U_n
@@ -188,8 +204,19 @@ MODULE MethodOfEstablishing_Plate
     end do
 
     close(IO_Residuals)
-
     call writeAnswer(IO,NI,NJ,X_Cell,Y_Cell,U_n,V_n,P_n)
+
+    do I = 1, NI
+        do J = 1, NJ
+            U_Node(I,J) = (U_n(I,J) + U_n(I-1,J) + U_n(I,J-1) + U_n(I-1,J-1))/4.0
+            V_Node(I,J) = (V_n(I,J) + V_n(I-1,J) + V_n(I,J-1) + V_n(I-1,J-1))/4.0
+            P_Node(I,J) = (P_n(I,J) + P_n(I-1,J) + P_n(I,J-1) + P_n(I-1,J-1))/4.0
+        end do
+    end do
+    call initializeListener()
+    call writeListenXComponent(U_Node, X_Node, Y_Node, NJ, NI, 'U_NavStocks')
+    call writeListenXComponent(V_Node, X_Node, Y_Node, NJ, NI, 'V_NavStocks')
+
     return
     END SUBROUTINE MethodOfEstablishinglSolve_Plate
 
@@ -284,5 +311,39 @@ MODULE MethodOfEstablishing_Plate
         U(:,0) = - U(:,1)
 
     END SUBROUTINE InitValue
+
+    SUBROUTINE CfSolver(U0, visk, U, X_Node, Y_Node,  NI, NJ, IO_Cf)
+        real(8) :: U0, visk, delta_max, delta_medium
+        integer :: IO_Cf, NI, NJ, I
+        real(8) :: X_Node(1:NI,1:NJ), U(1:NI,1:NJ), Y_Node(1:NI,1:NJ)
+        real(8), allocatable :: Cf(:), Cf_Blazius(:),  delta1(:)
+        call info('Расчет и вывод коэффициента сопротивления в файл Cf_x.dat')
+        allocate (delta1(NI-2))
+        allocate(Cf(NI))
+        allocate (Cf_Blazius(NI))
+        open(IO_Cf, FILE='resource/outputres/Cf_x.dat', status = "replace")
+         write(IO_Cf,*) 'VARIABLES = "X", "Cf", "Cf_Blazius"'
+        do I = 3, NI
+            Cf(I-2) = (2*visk/(U0**2))*(U(I,2)-U(I,1))/(Y_Node(I,2) - Y_Node(I,1))
+            Cf_Blazius(I-2) = 0.664/sqrt(U0*X_Node(I,1)/visk)
+            if(Cf(I-2) > Cf_Blazius(I-2)) then
+                delta1(I-2) = (Cf(I-2) - Cf_Blazius(I-2))/Cf(I-2)
+            else
+                delta1(I-2) = (Cf_Blazius(I-2)-Cf(I-2))/Cf_Blazius(I-2)
+            end if
+            write(IO_Cf, *) X_Node(I-2,1), Cf(I-2), Cf_Blazius(I-2)
+        end do
+        close(IO_Cf)
+        delta_max = MAXVAL(delta1(1:NI-2)) * 100
+        delta_medium = SUM(delta1(1:NI-2))/(NI-2) *100
+        open(IO_Cf, FILE='resource/outputres/Cf_delta.dat', status = "replace")
+        write(IO_Cf, *) 'delta_max=', delta_max
+        write(IO_Cf, *) 'delta_medium=', delta_medium
+        close(IO_Cf)
+        deallocate (Cf)
+        deallocate (Cf_Blazius)
+        deallocate (delta1)
+        call info('Расчет и вывод коэффициента сопротивления в файл Cf_x.dat :: Complete')
+    END SUBROUTINE CfSolver
 
 END MODULE MethodOfEstablishing_Plate

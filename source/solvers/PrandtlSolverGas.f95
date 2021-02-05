@@ -1,5 +1,6 @@
 MODULE PrandtlSolverGas
     use Logger_module
+    use Listener
     use SweepMethods
     implicit none
     CONTAINS
@@ -77,7 +78,7 @@ MODULE PrandtlSolverGas
         call info('Create mesh :: Complete')
 
         call info('Start Prandtl solver for gas, parameters: eps=' // trim(realToChar(Eps)) // ' NITER='&
-    & // trim(intToChar(NITER))   )
+        & // trim(intToChar(NITER))   )
         call InitValue(U, V, P, ro, NI, NJ, U0, ro0, Cc, gamm, Ue)
         call BoundValue(U, V, NI, NJ, U0, H, Diametr, Ue)
         U_n = U
@@ -144,16 +145,15 @@ MODULE PrandtlSolverGas
         write(*,*) "Prandtl solver for gas :: Complete"
         call info('Prandtl solver for gas :: Complete')
 
-    !****************** Output Results ********************
-
         write(*,*) 'Output data node (Prandtl)'
         call info('Output data node (Prandtl)')
         open(IO,FILE='resource/outputres/data_pr.tec')
         call OutputFields_Node(IO,NI,NJ,X_Node,Y_Node,U_n,V_n,P)
         close(IO)
         call info('Output data node (Prandtl) :: Complete')
+        call initializeListener()
+        call writeListenXComponent(U_n, X_Node, Y_Node, NJ, NI, 'U_prandtl')
         return
-
     END SUBROUTINE
 
     SUBROUTINE OutputFields_Cell(IO,NI,NJ,X,Y,U,V,P)
@@ -190,7 +190,6 @@ MODULE PrandtlSolverGas
 
     END  SUBROUTINE
 
-    !Set Boundary Conditio
     SUBROUTINE BoundValue(U,V,NI,NJ,U0, H, Diametr, Ue)
         implicit none
 
@@ -206,7 +205,6 @@ MODULE PrandtlSolverGas
 
     END SUBROUTINE
 
-    !Set Initial Values
     SUBROUTINE InitValue(U,V,P,ro,NI,NJ,U0, ro0, C, gamm, Ue)
         implicit none
 
