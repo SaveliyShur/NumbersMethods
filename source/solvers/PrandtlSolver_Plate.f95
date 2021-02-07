@@ -168,7 +168,7 @@ MODULE  PrandtlSolver_Plate
 
         call initializeListener()
         call writeListenXComponent(U_n, X_Node, Y_Node, NJ, NI, 'U_prandtl')
-
+        call writeListenXComponent(V_n, X_Node, Y_Node, NJ, NI, 'U_prandtl')
         return
     END SUBROUTINE
 

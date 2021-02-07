@@ -48,8 +48,8 @@ MODULE PrandtlSolverGas
         close(IO)
         call info('Read input file : Complete')
 
-        allocate(X_Node(NI,NJ)) ! mesh nodes X-coordinates
-        allocate(Y_Node(NI,NJ)) ! mesh nodes Y-coordinates
+        allocate(X_Node(NI,NJ))
+        allocate(Y_Node(NI,NJ))
 
         allocate(A(1:NJ))
         allocate(B(1:NJ))
@@ -153,6 +153,7 @@ MODULE PrandtlSolverGas
         call info('Output data node (Prandtl) :: Complete')
         call initializeListener()
         call writeListenXComponent(U_n, X_Node, Y_Node, NJ, NI, 'U_prandtl')
+        call writeListenXComponent(V_n, X_Node, Y_Node, NJ, NI, 'V_prandtl')
         return
     END SUBROUTINE
 
@@ -199,8 +200,8 @@ MODULE PrandtlSolverGas
 
         U(1:NI,1) = 0.
         V(1:NI,1) = 0.
+        U(1,1:NJ) = Ue
         U(1,1:nint(Diametr/H*NJ)) = U0
-        U(1,(nint(Diametr/H*NJ)+1):NJ) = Ue
         U(1:NI,NJ) = Ue
 
     END SUBROUTINE
