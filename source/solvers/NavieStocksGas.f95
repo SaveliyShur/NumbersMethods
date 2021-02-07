@@ -1,6 +1,7 @@
 module NavieStocksGas
     use Logger_module
     use Listener
+    use Writer
     implicit none
     CONTAINS
 
@@ -89,19 +90,19 @@ module NavieStocksGas
             do I=1,NI
                 X_Cell(I,J)=(I-0.5)*dx
                 Y_Cell(I,J)=(J-0.5)*dy
-                X_Node(I,J) = (I-1)*dx
-                Y_Node(I,J) = (J-1)*dy
+                X_Node(I,J) = (I-1.0)*dx
+                Y_Node(I,J) = (J-1.0)*dy
             end do
         end do
 
         do J=1,NJ
             X_Cell(0,J) = -dx/2.0
         end do
-
+        X_Cell(0,0) = -dx/2.0
+        Y_Cell(0,0) = -dy/2.0
         do I = 1, NI
             Y_Cell(I,0) = -dy/2.0
         end do
-
 
         call info('start NavieStocksGas_Solver solver for gas, parameters: eps=' // trim(realToChar(Eps)) // ' NITER='&
         & // trim(intToChar(NITER)) // ' numbers thread=' // trim(intToChar(num)) //' dt=' // trim(realToChar(dt))  )
@@ -115,7 +116,7 @@ module NavieStocksGas
 
         call info('Write init data in data_ns_init.tec')
         open(IO,FILE='resource/outputres/data_ns_init.tec')
-        call OutputFields_Cell(IO,NI,NJ,X_Cell,Y_Cell,U_n,V_n,P_n)
+        call OutputFields_Cell(IO,NI,NJ,X_Cell,Y_Cell,U_n,V_n,P_n, ro)
         close(IO)
         call info('Write data init :: Complete')
 
@@ -223,10 +224,10 @@ module NavieStocksGas
                 & realToChar(max(U_Residuals, V_Residuals, P_Residuals)))
             end if
         end do
-
         close(IO_Residuals)
-
-        call writeAnswer(IO,NI,NJ,X_Cell,Y_Cell,U_n,V_n,P_n)
+        open(IO, file='resource/outputres/data_ns.dat')
+        call OutputFields_Cell(IO,NI,NJ,X_Cell,Y_Cell,U_n,V_n,P_n, ro_n)
+        close(IO)
         do I = 1, NI
             do J = 1, NJ
                 U_Node(I,J) = (U_n(I,J) + U_n(I-1,J) + U_n(I,J-1) + U_n(I-1,J-1))/4.0
@@ -240,56 +241,6 @@ module NavieStocksGas
         return
     END SUBROUTINE NavieStocksGas_Solver
 
-    !Функция пишет ответ в файл
-    SUBROUTINE writeAnswer(IO,NI,NJ,X,Y,U,V,P)
-       implicit none
-
-       integer NI,NJ,IO
-       real(8), dimension(NI):: X
-       real(8), dimension(NJ):: Y
-       real(8), dimension(0:NI,0:NJ)::U,V,P
-       call info('Write answer')
-       write(*,*) 'Output data cell (Navier - Stokes) '
-       open(IO,FILE='resource/outputres/data_ns.tec', status = "replace")
-       call OutputFields_Cell(IO,NI,NJ,X,Y,U,V,P)
-       close(IO)
-       call info('Write answer :: Complete')
-    END SUBROUTINE writeAnswer
-
-    !Функция для вывода в формате техплот
-    SUBROUTINE OutputFields_Cell(IO,NI,NJ,X,Y,U,V,P)
-        implicit none
-
-        integer NI,NJ,IO, i, j
-        real(8), dimension(NI, NJ):: X
-        real(8), dimension(NI, NJ):: Y
-        real(8), dimension(0:NI,0:NJ)::U,V,P
-
-        U(1,:) = (U(1,:) + U(0,:))/2.0
-        V(1,:) = (V(1,:) + V(0,:))/2.0
-        P(1,:) = (P(1,:) + P(0,:))/2.0
-
-        U(NI,:) = (U(NI,:) + U(NI-1,:))/2.0
-        V(NI,:) = (V(NI,:) + V(NI-1,:))/2.0
-        P(NI,:) = (P(NI,:) + P(NI-1,:))/2.0
-
-        U(:,NJ) = (U(:,NJ-1) + U(:,NJ))/2.0
-        V(:,NJ) = (V(:,NJ-1) + V(:,NJ))/2.0
-        P(:,NJ) = (P(:,NJ-1) + P(:,NJ))/2.0
-
-        U(:,1) = (U(:,1) + U(:,0))/2.0
-        V(:,1) = (V(:,1) + V(:,0))/2.0
-        P(:,1) = (P(:,1) + P(:,0))/2.0
-        write(IO,*) 'VARIABLES = "X", "Y", "U", "V", "P"'
-        write(IO,*) 'ZONE I=', NI, ', J=', NJ
-        do i = 1, NI
-            do j = 1, NJ
-                write(IO,*) X(I, J), Y(I,J), U(I,J), V(I,J), P(I,J)
-            end do
-        end do
-
-    END SUBROUTINE OutputFields_Cell
-
     SUBROUTINE BoundValue(U,V,P,ro,NI,NJ,U0, C, ro0, gamm, H, Diametr, Ue)
         implicit none
 
@@ -298,8 +249,8 @@ module NavieStocksGas
         real(8) :: U0, Ue, C, ro0, gamm, H, Diametr
 
         !левая граница
-        U(0,1:nint(Diametr/H*NJ)) = U0
-        U(0,(nint(Diametr/H*NJ)+1):NJ) = Ue
+        U(0,1:NJ) = Ue
+        U(0,10:nint(Diametr/H*NJ)+10) = U0
         V(0,1:NJ) = 0.0
         P(0,1:NJ) = P(1,1:NJ)
         ro(0,1:NJ) = ro(1,1:NJ)
